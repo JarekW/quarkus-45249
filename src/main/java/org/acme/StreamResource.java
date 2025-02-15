@@ -1,5 +1,6 @@
 package org.acme;
 
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.OpenOptions;
@@ -47,6 +48,14 @@ public class StreamResource {
 //                .onItem().call(buffer -> {
 //                    return Uni.createFrom().nullItem().onItem().delayIt().by(Duration.ofMillis(20));
 //                })
+                    .onTermination().call((throwable, aBoolean) -> {
+                        Log.info("before close on termination");
+                        return response.close()
+                            .onTermination().invoke(() -> {
+                                Log.info("after close on termination");
+                            })
+                        ;
+                    })
                 ;
             },
             (response) -> {
